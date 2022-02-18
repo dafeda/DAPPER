@@ -66,7 +66,7 @@ class PartFilt:
 
                 if self.qroot != 1.0:
                     # Evaluate p/q (for each col of D) when q:=p**(1/self.qroot).
-                    w *= np.exp(-0.5 * np.sum(D ** 2, axis=1) * (1 - 1 / self.qroot))
+                    w *= np.exp(-0.5 * np.sum(D**2, axis=1) * (1 - 1 / self.qroot))
                     w /= w.sum()
 
             if ko is not None:
@@ -191,7 +191,7 @@ class PFa:
 
                 if self.qroot != 1.0:
                     # Evaluate p/q (for each col of D) when q:=p**(1/self.qroot).
-                    w *= np.exp(-0.5 * np.sum(D ** 2, axis=1) * (1 - 1 / self.qroot))
+                    w *= np.exp(-0.5 * np.sum(D**2, axis=1) * (1 - 1 / self.qroot))
                     w /= w.sum()
 
             if ko is not None:
@@ -287,11 +287,11 @@ class PFxN_EnKF:
                         P_cholU = funm_psd(Pa, np.sqrt)
                         if DD is None or not self.re_use:
                             DD = rnd.randn(N * xN, Nx)
-                            chi2 = np.sum(DD ** 2, axis=1) * Nx / N
+                            chi2 = np.sum(DD**2, axis=1) * Nx / N
                             log_q = -0.5 * chi2
                     else:
                         V, sig, UT = svd0(Yw @ Rm12.T)
-                        dgn = pad0(sig ** 2, N) + 1
+                        dgn = pad0(sig**2, N) + 1
                         Pw = (V * dgn ** (-1.0)) @ V.T
                         cntrs = E + (y - Eo) @ Ri @ Yw.T @ Pw @ Aw
                         P_cholU = (V * dgn ** (-0.5)).T @ Aw
@@ -300,7 +300,7 @@ class PFxN_EnKF:
                         if DD is None or not self.re_use:
                             rnk = min(Nx, N - 1)
                             DD = rnd.randn(N * xN, N)
-                            chi2 = np.sum(DD ** 2, axis=1) * rnk / N
+                            chi2 = np.sum(DD**2, axis=1) * rnk / N
                             log_q = -0.5 * chi2
                         # NB: the DoF_linalg/DoF_stoch correction
                         # is only correct "on average".
@@ -322,11 +322,11 @@ class PFxN_EnKF:
                     innovs_pf = AD @ tinv(s * Aw)
                     # NB: Correct: innovs_pf = (ED-E_orig) @ tinv(s*Aw)
                     #     But it seems to make no difference on well-tuned performance !
-                    log_pf = -0.5 * np.sum(innovs_pf ** 2, axis=1)
+                    log_pf = -0.5 * np.sum(innovs_pf**2, axis=1)
 
                     # log(likelihood(x))
                     innovs = (y - HMM.Obs(ED, t)) @ Rm12.T
-                    log_L = -0.5 * np.sum(innovs ** 2, axis=1)
+                    log_L = -0.5 * np.sum(innovs**2, axis=1)
 
                     # Update weights
                     log_tot = log_L + log_pf - log_q
@@ -466,7 +466,7 @@ def reweight(w, lklhd=None, logL=None, innovs=None):
         if lklhd is not None:
             logL = np.log(lklhd)
         elif innovs is not None:
-            chi2 = np.sum(innovs ** 2, axis=1)
+            chi2 = np.sum(innovs**2, axis=1)
             logL = -0.5 * chi2
 
     logw = logw + logL  # Bayes' rule in log-space
@@ -641,11 +641,11 @@ def sample_quickly_with(C12, N=None):
     if N_ > 2 * M:
         cholR = chol_reduce(C12)
         D = rnd.randn(N, cholR.shape[0])
-        chi2 = np.sum(D ** 2, axis=1)
+        chi2 = np.sum(D**2, axis=1)
         sample = D @ cholR
     else:
         chi2_compensate_for_rank = min(M / N_, 1.0)
         D = rnd.randn(N, N_)
-        chi2 = np.sum(D ** 2, axis=1) * chi2_compensate_for_rank
+        chi2 = np.sum(D**2, axis=1) * chi2_compensate_for_rank
         sample = D @ C12
     return sample, chi2

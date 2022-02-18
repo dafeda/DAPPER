@@ -930,12 +930,12 @@ def phase_particles(
         # Scatter. NB: don't init with nan's coz it's buggy
         # (wrt. get_color() and _offsets3d) since mpl 3.1.
         if "E" in d:
-            s.E = ax.scatter(*E.T[p.dims], s=3 ** 2, c=[hn.get_color() for hn in h.E])
+            s.E = ax.scatter(*E.T[p.dims], s=3**2, c=[hn.get_color() for hn in h.E])
         if "mu" in d:
-            s.mu = ax.scatter(*ones(M), s=8 ** 2, c=[h.mu.get_color()])
+            s.mu = ax.scatter(*ones(M), s=8**2, c=[h.mu.get_color()])
         if True:
             s.x = ax.scatter(
-                *ones(M), s=14 ** 2, c=[h.x.get_color()], marker=(5, 1), zorder=99
+                *ones(M), s=14**2, c=[h.x.get_color()], marker=(5, 1), zorder=99
             )
 
         def update(key, E, P):

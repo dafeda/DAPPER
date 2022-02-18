@@ -214,7 +214,7 @@ def iEnKS_update(upd_a, E, DAW, HMM, stats, EPS, y, time, Rm12, xN, MDA, thresho
         # Post. cov (approx) of w,
         # estimated at current iteration, raised to power.
         def Cowp(expo):
-            return (V * (pad0(s ** 2, N) + za) ** -expo) @ V.T
+            return (V * (pad0(s**2, N) + za) ** -expo) @ V.T
 
         Cow1 = Cowp(1.0)
 
@@ -355,7 +355,7 @@ class Var4D:
 
                     # Post. cov (approx) of w,
                     # estimated at current iteration, raised to power.
-                    Cow1 = (V * (pad0(s ** 2, Nx) + 1) ** -1.0) @ V.T
+                    Cow1 = (V * (pad0(s**2, Nx) + 1) ** -1.0) @ V.T
 
                     # Compute analysis update.
                     grad = Y.T @ dy - w  # Cost function gradient

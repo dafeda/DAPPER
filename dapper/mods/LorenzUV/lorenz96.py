@@ -15,7 +15,7 @@ nU = LUV.nU
 # Full
 ################
 
-tseq = modelling.Chronology(dt=0.005, dto=0.05, T=4 ** 3, BurnIn=6)
+tseq = modelling.Chronology(dt=0.005, dto=0.05, T=4**3, BurnIn=6)
 
 
 Dyn = modelling.Operator(
@@ -43,7 +43,7 @@ HMM_full = modelling.HiddenMarkovModel(Dyn, Obs, tseq, X0, **other)
 ################
 
 # Just change dt from 005 to 05
-tseq = modelling.Chronology(dt=0.05, dto=0.05, T=4 ** 3, BurnIn=6)
+tseq = modelling.Chronology(dt=0.05, dto=0.05, T=4**3, BurnIn=6)
 
 Dyn = modelling.Operator(
     M=LUV.M, model=modelling.with_rk4(LUV.dxdt_parameterized), noise=0

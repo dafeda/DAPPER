@@ -19,7 +19,7 @@ G = 1.23
 @modelling.ens_compatible
 def dxdt(x):
     x, y, z = x
-    dx = -(y ** 2) - z ** 2 - a * x + a * F
+    dx = -(y**2) - z**2 - a * x + a * F
     dy = x * y - b * x * z - y + G
     dz = b * x * y + x * z - z
     return np.array([dx, dy, dz])

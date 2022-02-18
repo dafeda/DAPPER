@@ -9,7 +9,6 @@ from dapper.tools.progressbar import progbar
 from .utils import NamedFunc
 
 
-# fmt: off
 def rk4(f, x, t, dt, stages=4, s=0):
     """Runge-Kutta (explicit, non-adaptive) numerical (S)ODE solvers.
 
@@ -57,18 +56,25 @@ def rk4(f, x, t, dt, stages=4, s=0):
         W = 0
 
     # Approximations to Delta x
-    if stages >= 1: k1 = dt * f(x,           t)         + W    # noqa
-    if stages >= 2: k2 = dt * f(x+k1/2.0,    t+dt/2.0)  + W    # noqa
-    if stages == 3: k3 = dt * f(x+k2*2.0-k1, t+dt)      + W    # noqa
+    if stages >= 1:
+        k1 = dt * f(x, t) + W  # noqa
+    if stages >= 2:
+        k2 = dt * f(x + k1 / 2.0, t + dt / 2.0) + W  # noqa
+    if stages == 3:
+        k3 = dt * f(x + k2 * 2.0 - k1, t + dt) + W  # noqa
     if stages == 4:
-                    k3 = dt * f(x+k2/2.0,    t+dt/2.0)  + W    # noqa
-                    k4 = dt * f(x+k3,        t+dt)      + W    # noqa
+        k3 = dt * f(x + k2 / 2.0, t + dt / 2.0) + W  # noqa
+        k4 = dt * f(x + k3, t + dt) + W  # noqa
 
     # Mix proxies
-    if    stages == 1: y = x + k1                              # noqa
-    elif  stages == 2: y = x + k2                              # noqa
-    elif  stages == 3: y = x + (k1 + 4.0*k2 + k3)/6.0          # noqa
-    elif  stages == 4: y = x + (k1 + 2.0*(k2 + k3) + k4)/6.0   # noqa
+    if stages == 1:
+        y = x + k1  # noqa
+    elif stages == 2:
+        y = x + k2  # noqa
+    elif stages == 3:
+        y = x + (k1 + 4.0 * k2 + k3) / 6.0  # noqa
+    elif stages == 4:
+        y = x + (k1 + 2.0 * (k2 + k3) + k4) / 6.0  # noqa
     else:
         raise NotImplementedError
 
@@ -77,6 +83,7 @@ def rk4(f, x, t, dt, stages=4, s=0):
 
 def with_rk4(dxdt, autonom=False, stages=4, s=0):
     """Wrap `dxdt` in `rk4`."""
+
     def tendency(x, t):
         if autonom:
             return dxdt(x)
@@ -86,7 +93,7 @@ def with_rk4(dxdt, autonom=False, stages=4, s=0):
     def step(x0, t0, dt):
         return rk4(tendency, x0, t0, dt, stages=stages)
 
-    name = "rk"+str(stages)+" integration of "+pretty_repr(dxdt)
+    name = "rk" + str(stages) + " integration of " + pretty_repr(dxdt)
     step = NamedFunc(step, name)
     return step
 
@@ -126,8 +133,9 @@ def with_recursion(func, prog=False):
     >>> np.allclose(x7, x7_true)
     True
     """
+
     def fun_k(x0, k, *args, **kwargs):
-        xx = np.zeros((k+1,)+x0.shape)
+        xx = np.zeros((k + 1,) + x0.shape)
         xx[0] = x0
 
         # Prog. bar name
@@ -139,14 +147,14 @@ def with_recursion(func, prog=False):
             desc = prog
 
         for i in progbar(range(k), desc):
-            xx[i+1] = func(xx[i], *args, **kwargs)
+            xx[i + 1] = func(xx[i], *args, **kwargs)
 
         return xx
 
     return fun_k
 
 
-def integrate_TLM(TLM, dt, method='approx'):
+def integrate_TLM(TLM, dt, method="approx"):
     r"""Compute the resolvent.
 
     The resolvent may also be called
@@ -171,16 +179,16 @@ def integrate_TLM(TLM, dt, method='approx'):
     --------
     `FD_Jac`.
     """
-    if method == 'analytic':
+    if method == "analytic":
         Lambda, V = sla.eig(TLM)
-        resolvent = (V * np.exp(dt*Lambda)) @ np.linalg.inv(V)
+        resolvent = (V * np.exp(dt * Lambda)) @ np.linalg.inv(V)
         resolvent = np.real_if_close(resolvent, tol=10**5)
     else:
         Id = np.eye(TLM.shape[0])
-        if method == 'rk4':
-            resolvent = rk4(lambda U, t: TLM@U, Id, np.nan, dt)
-        elif method.lower().startswith('approx'):
-            resolvent = Id + dt*TLM
+        if method == "rk4":
+            resolvent = rk4(lambda U, t: TLM @ U, Id, np.nan, dt)
+        elif method.lower().startswith("approx"):
+            resolvent = Id + dt * TLM
         else:
             raise ValueError
     return resolvent
@@ -202,13 +210,17 @@ def FD_Jac(func, eps=1e-7):
     --------
     >>> dstep_dx = FD_Jac(step) # doctest: +SKIP
     """
+
     def Jac(x, *args, **kwargs):
         def f(y):
             return func(y, *args, **kwargs)
-        E = x + eps*np.eye(len(x))  # row-oriented ensemble
-        FT = (f(E) - f(x))/eps      # => correct broadcasting
-        return FT.T                 # => Jac[i,j] = df_i/dx_j
+
+        E = x + eps * np.eye(len(x))  # row-oriented ensemble
+        FT = (f(E) - f(x)) / eps  # => correct broadcasting
+        return FT.T  # => Jac[i,j] = df_i/dx_j
+
     return Jac
+
 
 # Transpose explanation:
 # - Let F[i,j] = df_i/dx_j be the Jacobian matrix such that

@@ -53,8 +53,8 @@ class Model:
 
     def __post_init__(self):
         J = self.J
-        self.alpha = (3 * J ** 2 + 3) / (2 * J ** 3 + 4 * J)
-        self.beta = (2 * J ** 2 + 1) / (J ** 4 + 2 * J ** 2)
+        self.alpha = (3 * J**2 + 3) / (2 * J**3 + 4 * J)
+        self.beta = (2 * J**2 + 1) / (J**4 + 2 * J**2)
 
         # Heuristic
         self.x0 = 3 + 4 * np.ones(self.M)
@@ -79,7 +79,7 @@ class Model:
 
         return (
             +prodsum_self(x, self.K)  # "convection" of x
-            + prodsum_K1(y, y) * self.b ** 2  # "convection" of y
+            + prodsum_K1(y, y) * self.b**2  # "convection" of y
             + prodsum_K1(y, x) * self.c  # coupling
             + -x
             - y * self.b  # damping

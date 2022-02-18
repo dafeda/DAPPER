@@ -75,7 +75,7 @@ step = modelling.with_rk4(dxdt_augmented, autonom=True)
 tseq = modelling.Chronology(
     dt=0.05,  # Integrational time step
     dko=1,  # Steps of duration dt between obs
-    Ko=10 ** 3,  # Total number of obs in experiment
+    Ko=10**3,  # Total number of obs in experiment
     BurnIn=5,  # Omit from averages the period t=0 --> BurnIn
     Tplot=7,
 )  # Default plot length
@@ -156,7 +156,7 @@ def set_X0_and_simulate(hmm, xp):
     dpr.set_seed(3000)
     hmm.X0 = X0(TRUTH, 0)
     xx, yy = hmm.simulate()
-    hmm.X0 = X0(GUESS, 0.1 ** 2)
+    hmm.X0 = X0(GUESS, 0.1**2)
     return hmm, xx, yy
 
 

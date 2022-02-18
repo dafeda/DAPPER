@@ -9,7 +9,7 @@ from statsmodels.nonparametric.kernel_density import KDEMultivariate as kde  # n
 
 f, axs = plt.subplots(7, 1, sharex=True, sharey=True)
 
-N = 5 * 10 ** 2
+N = 5 * 10**2
 
 # Target distribution
 dof = 3

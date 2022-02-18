@@ -22,7 +22,7 @@ Obs = modelling.Operator(
     M=Obs.get("M"),
     model=Obs.get("model"),
     linear=Obs.get("linear"),
-    noise=0.1 ** 2,
+    noise=0.1**2,
     localizer=nd_Id_localization((Nx,), (1,), jj, periodic=True),
 )
 

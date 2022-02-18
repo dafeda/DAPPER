@@ -103,7 +103,7 @@ def l96s_tay2_step(x, t, dt, s):
 
     # coefficients defined based on the p=1 Fourier truncation
     rho = 1.0 / 12.0 - 0.5 * np.pi ** (-2)
-    alpha = np.pi ** 2 / 180.0 - 0.5 * np.pi ** (-2)
+    alpha = np.pi**2 / 180.0 - 0.5 * np.pi ** (-2)
 
     # draw standard normal sample to define the
     # recursive Stratonovich integral coefficients
@@ -112,7 +112,7 @@ def l96s_tay2_step(x, t, dt, s):
 
     # define the auxiliary functions of random Fourier coefficients, a and b
     a = -2.0 * np.sqrt(dt * rho) * mu - np.sqrt(2.0 * dt) * zeta / np.pi
-    b = np.sqrt(dt * alpha) * phi + np.sqrt(dt / (2.0 * np.pi ** 2)) * eta
+    b = np.sqrt(dt * alpha) * phi + np.sqrt(dt / (2.0 * np.pi**2)) * eta
 
     # vector of first order Stratonovich integrals
     J_pdelta = (dt / 2.0) * (np.sqrt(dt) * xi + a)
@@ -121,7 +121,7 @@ def l96s_tay2_step(x, t, dt, s):
         # psi will be a generic function of the indicies l1 and l2, we will define
         # psi plus and psi minus via this
         psi = (
-            dt ** 2 * xi[l1] * xi[l2] / 3.0
+            dt**2 * xi[l1] * xi[l2] / 3.0
             + dt * a[l1] * a[l2] / 2.0
             + dt ** (1.5) * (xi[l1] * a[l2] + xi[l2] * a[l1]) / 4.0
             - dt ** (1.5) * (xi[l1] * b[l2] + xi[l2] * b[l1]) / (2.0 * np.pi)
@@ -137,10 +137,10 @@ def l96s_tay2_step(x, t, dt, s):
     )
 
     # the final vectorized step forward is given as
-    x = x + dx * dt + dt ** 2 * 0.5 * dxF @ dx  # deterministic taylor step
+    x = x + dx * dt + dt**2 * 0.5 * dxF @ dx  # deterministic taylor step
     x += s * np.sqrt(dt) * xi  # stochastic euler step
     x += s * dxF @ J_pdelta  # stochastic first order taylor step
-    x += s ** 2 * (psi_plus - psi_minus)  # stochastic second order taylor step
+    x += s**2 * (psi_plus - psi_minus)  # stochastic second order taylor step
 
     return x
 

@@ -47,7 +47,7 @@ def Model(dt=0.25, DL=32, Nx=128):
     # kk = np.fft.fftfreq(Nx, DL/Nx/2)
     # Operators
     D = 1j * kk  # Differentiation to compute: F[ u_x ]
-    L = kk ** 2 - kk ** 4  # Linear operator for KS eqn: F[ - u_xx - u_xxxx]
+    L = kk**2 - kk**4  # Linear operator for KS eqn: F[ - u_xx - u_xxxx]
 
     # NonLinear term (-u*u_x) in Fourier domain via time domain
     def NL(v):
@@ -106,12 +106,12 @@ def Model(dt=0.25, DL=32, Nx=128):
     # RK4 coefficients (modified by Cox-Matthews):
     f1 = (
         h
-        * ((-4 - CL + np.exp(CL) * (4 - 3 * CL + CL ** 2)) / CL ** 3).mean(axis=-1).real
+        * ((-4 - CL + np.exp(CL) * (4 - 3 * CL + CL**2)) / CL**3).mean(axis=-1).real
     )
-    f2 = h * ((2 + CL + np.exp(CL) * (-2 + CL)) / CL ** 3).mean(axis=-1).real
+    f2 = h * ((2 + CL + np.exp(CL) * (-2 + CL)) / CL**3).mean(axis=-1).real
     f3 = (
         h
-        * ((-4 - 3 * CL - CL ** 2 + np.exp(CL) * (4 - CL)) / CL ** 3).mean(axis=-1).real
+        * ((-4 - 3 * CL - CL**2 + np.exp(CL) * (4 - CL)) / CL**3).mean(axis=-1).real
     )
     #
 

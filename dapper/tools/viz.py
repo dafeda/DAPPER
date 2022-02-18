@@ -424,7 +424,7 @@ def plot_err_components(stats):
     usprd = en_mean(stats.svals.a)
 
     ax0.plot(arange(Nx), err, "k", lw=2, label="Error")
-    if Nx < 10 ** 3:
+    if Nx < 10**3:
         ax0.fill_between(arange(Nx), [0] * len(sprd), sprd, alpha=0.7, label="Spread")
     else:
         ax0.plot(arange(Nx), sprd, alpha=0.7, label="Spread")
