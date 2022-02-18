@@ -62,7 +62,7 @@ class RHF:
                     # Update j-th component of observed ensemble
                     dYf = Rm12[j, :] @ (y - Eo).T  # NB: does Rm12 make sense?
                     Yj = Rm12[j, :] @ Y.T
-                    Regr = A.T @ Yj / np.sum(Yj ** 2)
+                    Regr = A.T @ Yj / np.sum(Yj**2)
 
                     Sorted = np.argsort(dYf)
                     Revert = np.argsort(Sorted)

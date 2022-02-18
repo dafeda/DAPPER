@@ -27,7 +27,7 @@ def step(x, _t, _dt):
 
 def aux(x, y):
     """Comps used both by step and its jacobian."""
-    s = 1 + x ** 2 + y ** 2
+    s = 1 + x**2 + y**2
     t = 0.4 - 6 / s
     # x1= x*cos(t) + y*cos(t) # Colin's mod
     x1 = x * cos(t) - y * sin(t)
@@ -39,8 +39,8 @@ def dstep_dx(x, _t, _dt):
     s, t, x1, y1 = aux(*x)
     x, y = x
 
-    dt_x = 12 / s ** 2 * x
-    dt_y = 12 / s ** 2 * y
+    dt_x = 12 / s**2 * x
+    dt_y = 12 / s**2 * y
 
     dx_x = -y1 * dt_x + cos(t)
     dy_x = +x1 * dt_x + sin(t)

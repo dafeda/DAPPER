@@ -229,7 +229,7 @@ class UniRV(RV_with_mean_and_cov):
     def _sample(self, N):
         R = self.C.Right
         D = rnd.randn(N, len(R))
-        r = rnd.rand(N) ** (1 / len(R)) / np.sqrt(np.sum(D ** 2, axis=1))
+        r = rnd.rand(N) ** (1 / len(R)) / np.sqrt(np.sum(D**2, axis=1))
         D = r[:, None] * D
         return D @ R * 2
 

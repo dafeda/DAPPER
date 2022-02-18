@@ -36,7 +36,7 @@ dx = 1 / (nx - 1)
 
 
 def compute_q(psi):
-    Lapl = filters.laplace(psi, mode="constant") / dx ** 2
+    Lapl = filters.laplace(psi, mode="constant") / dx**2
     # mode='constant' coz BCs are: psi = nabla psi = nabla^2 psi = 0
     return Lapl - default_prms["F"] * psi
 

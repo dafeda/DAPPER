@@ -61,8 +61,8 @@ def set_seed(sd="clock"):
         raise RuntimeError(msg)
 
     if sd in [None, "clock"]:
-        microsec = int(10 ** 6 * time.time())
-        MAXSEED = 2 ** 32
+        microsec = int(10**6 * time.time())
+        MAXSEED = 2**32
         sd = microsec % MAXSEED
 
     if sd:

@@ -11,7 +11,7 @@ Nx = KS.Nx
 
 # nRepeat=10
 tseq = modelling.Chronology(
-    KS.dt, dko=2, Ko=2 * 10 ** 4, BurnIn=2 * 10 ** 3, Tplot=Tplot
+    KS.dt, dko=2, Ko=2 * 10**4, BurnIn=2 * 10**3, Tplot=Tplot
 )
 
 Dyn = modelling.Operator(M=Nx, model=KS.step, linear=KS.dstep_dx, noise=0)

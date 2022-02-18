@@ -31,7 +31,7 @@ class lazy_property:
 # Test matrices
 def randcov(M):
     """(Makeshift) random cov mat."""
-    N = int(np.ceil(2 + M ** 1.2))
+    N = int(np.ceil(2 + M**1.2))
     E = np.random.randn(N, M)
     return E.T @ E
 
@@ -310,7 +310,7 @@ class CovMat:
         if hasattr(self, "_C"):
             return np.diag(self._C)
         else:
-            return (self.Left ** 2).sum(axis=1)
+            return (self.Left**2).sum(axis=1)
 
     @property
     def Left(self):
@@ -351,7 +351,7 @@ class CovMat:
         if not self.has_done_EVD():
             V, s, UT = svd0(self._R)
             M = UT.shape[1]
-            d = s ** 2
+            d = s**2
             d = CovMat._clip(d)
             rk = (d > 0).sum()
             d = d[:rk]
@@ -439,7 +439,7 @@ class CovMat:
 
         # Full (as affordable)
         s += "\n full:"
-        if hasattr(self, "_C") or np.get_printoptions()["threshold"] > self.M ** 2:
+        if hasattr(self, "_C") or np.get_printoptions()["threshold"] > self.M**2:
             # We can afford to compute full matrix
             t = "\n" + str(self.full)
         else:

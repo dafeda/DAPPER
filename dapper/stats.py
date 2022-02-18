@@ -61,8 +61,8 @@ class Stats(series.StatPrint):
         en_mean = lambda x: np.mean(x, axis=0)  # noqa
         self.field_summaries = dict(
             m=lambda x: en_mean(x),  # mean-field
-            ms=lambda x: en_mean(x ** 2),  # root-mean-square
-            rms=lambda x: np.sqrt(en_mean(x ** 2)),  # root-mean-square
+            ms=lambda x: en_mean(x**2),  # root-mean-square
+            rms=lambda x: np.sqrt(en_mean(x**2)),  # root-mean-square
             ma=lambda x: en_mean(np.abs(x)),  # mean-absolute
             gm=lambda x: np.exp(en_mean(np.log(x))),  # geometric mean
         )
@@ -299,7 +299,7 @@ class Stats(series.StatPrint):
         # A**3 is 10x slower than A**2 (or A**2.0).
         # => Use A2 = A**2, A3 = A*A2, A4=A*A3.
         # But, to save memory, only use A_pow.
-        A_pow = A ** 2
+        A_pow = A**2
 
         # Compute variances
         var = w @ A_pow
@@ -316,7 +316,7 @@ class Stats(series.StatPrint):
         A_pow *= A
         now.skew = np.nanmean(w @ A_pow / (s * s * s))
         A_pow *= A
-        now.kurt = np.nanmean(w @ A_pow / var ** 2 - 3)
+        now.kurt = np.nanmean(w @ A_pow / var**2 - 3)
 
         now.mad = np.nanmean(w @ abs(A))
 

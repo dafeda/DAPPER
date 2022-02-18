@@ -105,7 +105,7 @@ def mean_with_conf(xx):
         # See https://stats.stackexchange.com/q/90062
         # c = sum([(N-k)*a**k for k in range(1,N)])
         # But this series is analytically tractable:
-        c = ((N - 1) * a - N * a ** 2 + a ** (N + 1)) / (1 - a) ** 2
+        c = ((N - 1) * a - N * a**2 + a ** (N + 1)) / (1 - a) ** 2
         confidence_correction = 1 + 2 / N * c
         var *= confidence_correction
         uq = UncertainQtty(mu, np.sqrt(var))

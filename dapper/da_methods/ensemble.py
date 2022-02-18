@@ -104,21 +104,21 @@ def EnKF_analysis(E, Eo, hnoise, y, upd_a, stats=None, ko=None):
         elif "svd" in upd_a:
             # Implementation using svd of Y R^{-1/2}.
             V, s, _ = svd0(Y @ R.sym_sqrt_inv.T)
-            d = pad0(s ** 2, N) + N1
+            d = pad0(s**2, N) + N1
             Pw = (V * d ** (-1.0)) @ V.T
             T = (V * d ** (-0.5)) @ V.T * sqrt(N1)
             # docs/snippets/trHK.jpg
-            trHK = np.sum((s ** 2 + N1) ** (-1.0) * s ** 2)
+            trHK = np.sum((s**2 + N1) ** (-1.0) * s**2)
         elif "sS" in upd_a:
             # Same as 'svd', but with slightly different notation
             # (sometimes used by Sakov) using the normalization sqrt(N1).
             S = Y @ R.sym_sqrt_inv.T / sqrt(N1)
             V, s, _ = svd0(S)
-            d = pad0(s ** 2, N) + 1
+            d = pad0(s**2, N) + 1
             Pw = (V * d ** (-1.0)) @ V.T / N1  # = G/(N1)
             T = (V * d ** (-0.5)) @ V.T
             # docs/snippets/trHK.jpg
-            trHK = np.sum((s ** 2 + 1) ** (-1.0) * s ** 2)
+            trHK = np.sum((s**2 + 1) ** (-1.0) * s**2)
         else:  # 'eig' in upd_a:
             # Implementation using eig. val. decomp.
             d, V = sla.eigh(Y @ R.inv @ Y.T + N1 * eye(N))
@@ -537,7 +537,7 @@ class SL_EAKF:
                     if len(ii) == 0:
                         continue
                     Xi = A[:, ii] * tapering
-                    Regression = Xi.T @ Y_j / np.sum(Y_j ** 2)
+                    Regression = Xi.T @ Y_j / np.sum(Y_j**2)
                     mu[ii] += Regression * dy2
                     A[:, ii] += np.outer(Y2 - Y_j, Regression)
                     E = mu + A
@@ -673,23 +673,23 @@ def effective_N(YR, dyR, xN, g):
 
     # Make dual cost function (in terms of l1)
     def J(l1):
-        val = np.sum(du ** 2 / dgn_rk(l1)) + eN / l1 ** 2 + cL * np.log(l1 ** 2)
+        val = np.sum(du**2 / dgn_rk(l1)) + eN / l1**2 + cL * np.log(l1**2)
         return val
 
     # Derivatives (not required with minimize_scalar):
     def Jp(l1):
         val = (
-            -2 * l1 * np.sum(pad_rk(s ** 2) * du ** 2 / dgn_rk(l1) ** 2)
-            + -2 * eN / l1 ** 3
+            -2 * l1 * np.sum(pad_rk(s**2) * du**2 / dgn_rk(l1) ** 2)
+            + -2 * eN / l1**3
             + 2 * cL / l1
         )
         return val
 
     def Jpp(l1):
         val = (
-            8 * l1 ** 2 * np.sum(pad_rk(s ** 4) * du ** 2 / dgn_rk(l1) ** 3)
-            + 6 * eN / l1 ** 4
-            + -2 * cL / l1 ** 2
+            8 * l1**2 * np.sum(pad_rk(s**4) * du**2 / dgn_rk(l1) ** 3)
+            + 6 * eN / l1**4
+            + -2 * cL / l1**2
         )
         return val
 
@@ -698,7 +698,7 @@ def effective_N(YR, dyR, xN, g):
     # l1 = fmin_bfgs(J, x0=[1], gtol=1e-4, disp=0)
     # l1 = minimize_scalar(J, bracket=(sqrt(prior_mode), 1e2), tol=1e-4).x
 
-    za = N1 / l1 ** 2
+    za = N1 / l1**2
     return za
 
 
@@ -728,7 +728,7 @@ def effective_N(YR, dyR, xN, g):
 # although alternatives are provided (commented out).
 #
 def Newton_m(
-    fun, deriv, x0, is_inverted=False, conf=1.0, xtol=1e-4, ytol=1e-7, itermax=10 ** 2
+    fun, deriv, x0, is_inverted=False, conf=1.0, xtol=1e-4, ytol=1e-7, itermax=10**2
 ):
     """Find root of `fun`.
 
@@ -739,7 +739,7 @@ def Newton_m(
     Jx = fun(x0)
 
     def norm(x):
-        return sqrt(np.sum(x ** 2))
+        return sqrt(np.sum(x**2))
 
     while ytol < norm(Jx) and xtol < norm(dx) and itr < itermax:
         Dx = deriv(x0)
@@ -802,11 +802,11 @@ def hyperprior_coeffs(s, N, xN=1, g=0):
 
     # Mode correction (almost) as in eqn 36 of `bib.bocquet2015expanding`
     prior_mode = eN / cL  # Mode of l1 (before correction)
-    diagonal = pad0(s ** 2, N) + N1  # diag of Y@R.inv@Y + N1*I
+    diagonal = pad0(s**2, N) + N1  # diag of Y@R.inv@Y + N1*I
     #                                           (Hessian of J)
     I_KH = np.mean(diagonal ** (-1)) * N1  # ≈ 1/(1 + HBH/R)
     # I_KH      = 1/(1 + (s**2).sum()/N1)     # Scalar alternative: use tr(HBH/R).
-    mc = sqrt(prior_mode ** I_KH)  # Correction coeff
+    mc = sqrt(prior_mode**I_KH)  # Correction coeff
 
     # Apply correction
     eN /= mc
@@ -915,17 +915,17 @@ class EnKF_N:
 
                     def J(l1):
                         val = (
-                            np.sum(du ** 2 / dgn_rk(l1))
-                            + eN / l1 ** 2
-                            + cL * np.log(l1 ** 2)
+                            np.sum(du**2 / dgn_rk(l1))
+                            + eN / l1**2
+                            + cL * np.log(l1**2)
                         )
                         return val
 
                     # Derivatives (not required with minimize_scalar):
                     def Jp(l1):
                         val = (
-                            -2 * l1 * np.sum(pad_rk(s ** 2) * du ** 2 / dgn_rk(l1) ** 2)
-                            + -2 * eN / l1 ** 3
+                            -2 * l1 * np.sum(pad_rk(s**2) * du**2 / dgn_rk(l1) ** 2)
+                            + -2 * eN / l1**3
                             + 2 * cL / l1
                         )
                         return val
@@ -933,10 +933,10 @@ class EnKF_N:
                     def Jpp(l1):
                         val = (
                             8
-                            * l1 ** 2
-                            * np.sum(pad_rk(s ** 4) * du ** 2 / dgn_rk(l1) ** 3)
-                            + 6 * eN / l1 ** 4
-                            + -2 * cL / l1 ** 2
+                            * l1**2
+                            * np.sum(pad_rk(s**4) * du**2 / dgn_rk(l1) ** 3)
+                            + 6 * eN / l1**4
+                            + -2 * cL / l1**2
                         )
                         return val
 
@@ -967,7 +967,7 @@ class EnKF_N:
 
                     def nvrs(w):
                         # inverse of Jpp-approx
-                        return (V * (pad0(s ** 2, N) + za(w)) ** -1.0) @ V.T
+                        return (V * (pad0(s**2, N) + za(w)) ** -1.0) @ V.T
 
                     # Find w (optimize)
                     wa = Newton_m(Jp, nvrs, zeros(N), is_inverted=True)
@@ -1000,14 +1000,14 @@ class EnKF_N:
                         + eye(N)
                         - 2 * np.outer(w, w) / (eN + w @ w)
                     )
-                    T = funm_psd(Hw, lambda x: x ** -0.5)  # is there a sqrtm Woodbury?
+                    T = funm_psd(Hw, lambda x: x**-0.5)  # is there a sqrtm Woodbury?
 
                 E = mu + w @ A + T @ A
                 E = post_process(E, self.infl, self.rot)
 
                 self.stats.infl[ko] = l1
                 self.stats.trHK[ko] = (
-                    ((l1 * s) ** 2 + N1) ** (-1.0) * s ** 2
+                    ((l1 * s) ** 2 + N1) ** (-1.0) * s**2
                 ).sum() / HMM.Ny
 
             self.stats.assess(k, ko, E=E)

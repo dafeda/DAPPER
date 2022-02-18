@@ -13,7 +13,7 @@ from dapper.mods.Lorenz63 import step, x0
 
 simulator = modelling.with_recursion(step, prog="Simulating")
 
-xx = simulator(x0, k=5 * 10 ** 3, t0=0, dt=0.01)
+xx = simulator(x0, k=5 * 10**3, t0=0, dt=0.01)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 

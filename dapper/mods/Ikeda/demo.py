@@ -14,7 +14,7 @@ def demo(u, s0, N, as_points, ends):
     core.u = u
 
     # Simulation length
-    K = 10 ** 5 // N
+    K = 10**5 // N
 
     # Computations
     simulator = modelling.with_recursion(core.step, prog="Simulating")
