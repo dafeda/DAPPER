@@ -1,6 +1,8 @@
 """Time stepping (integration) tools."""
+from typing import Callable, Union, Optional
 
 import numpy as np
+import numpy.typing as npt
 import scipy.linalg as sla
 from IPython.lib.pretty import pretty as pretty_repr
 
@@ -96,6 +98,41 @@ def with_rk4(dxdt, autonom=False, stages=4, s=0):
     name = "rk" + str(stages) + " integration of " + pretty_repr(dxdt)
     step = NamedFunc(step, name)
     return step
+
+
+def run_forward(
+    step: Callable,
+    nsteps: int,
+    x: npt.NDArray[np.float_],
+    t: float,
+    dt: float,
+    prog: Optional[Union[str, bool]] = False,
+) -> npt.NDArray[np.float_]:
+    """Run callable `step` `nsteps` times, using previous output as intput.
+
+    Parameters
+    ----------
+    step : Callable
+    nsteps : int
+    x : npt.NDArray[np.float_]
+    t : float
+    dt : float
+    prog : Optional[Union[str, bool]], optional
+        Show progbar if str or True, otherwise no progbar, by default False
+
+    Returns
+    -------
+    npt.NDArray[np.float_]
+    """
+    xx = np.zeros((nsteps + 1,) + x.shape)
+    xx[0] = x
+
+    desc = None if prog == False else prog
+
+    for i in progbar(range(nsteps), desc):
+        xx[i + 1] = step(xx[i], t, dt)
+
+    return xx
 
 
 def with_recursion(func, prog=False):
