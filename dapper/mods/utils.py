@@ -198,39 +198,3 @@ def Id_Obs(Nx):
         observation operator/model and tangent linear observation operator
     """
     return partial_Id_Obs(Nx, np.arange(Nx))
-
-
-def linspace_int(Nx, Ny, periodic=True):
-    """Provide a range of `Ny` equispaced integers between `0` and `Nx-1`.
-
-    Parameters
-    ----------
-    Nx: int
-        Range of integers
-    Ny: int
-        Number of integers
-    periodic: bool, optional
-        Whether the vector is periodic.
-        Determines if `Nx == 0`.
-        Default: True
-
-    Returns
-    -------
-    integers: ndarray
-        The list of integers.
-
-    Examples
-    --------
-    >>> linspace_int(10, 10)
-    array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-    >>> linspace_int(10, 4)
-    array([0, 2, 5, 7])
-    >>> linspace_int(10, 5)
-    array([0, 2, 4, 6, 8])
-    """
-    if periodic:
-        jj = np.linspace(0, Nx, Ny + 1)[:-1]
-    else:
-        jj = np.linspace(0, Nx - 1, Ny)
-    jj = jj.astype(int)
-    return jj

@@ -29,7 +29,7 @@ X0 = modelling.RV(M=Dyn.M, file=sample_filename)
 
 # This will look like satellite tracks when plotted in 2D
 Ny = 300
-jj = modelling.linspace_int(Dyn.M, Ny)
+jj = np.linspace(0, Dyn.M, Ny, endpoint=False, dtype=int)
 
 # Want: random_offset(t1)==random_offset(t2) if t1==t2.
 # Solutions: (1) use caching (ensure maxsize=inf) or (2) stream seeding.

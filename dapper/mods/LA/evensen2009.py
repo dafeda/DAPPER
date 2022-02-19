@@ -17,7 +17,7 @@ from dapper.mods.Lorenz96 import LPs
 
 Nx = 1000
 Ny = 4
-jj = modelling.linspace_int(Nx, Ny)
+jj = np.linspace(0, Nx, Ny, endpoint=False, dtype=int)
 
 tseq = modelling.Chronology(dt=1, dko=5, T=300, BurnIn=-1, Tplot=100)
 

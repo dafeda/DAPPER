@@ -13,7 +13,7 @@ tseq = modelling.Chronology(dt=1, dko=5, T=500, BurnIn=60, Tplot=100)
 Nx = 1000
 Ny = 40
 
-jj = modelling.linspace_int(Nx, Ny)
+jj = np.linspace(0, Nx, Ny, endpoint=False, dtype=int)
 Obs = modelling.partial_Id_Obs(Nx, jj)
 Obs = modelling.Operator(
     M=Obs.get("M"), model=Obs.get("model"), linear=Obs.get("linear"), noise=0.01

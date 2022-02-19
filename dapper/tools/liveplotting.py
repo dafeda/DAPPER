@@ -34,7 +34,6 @@ from struct_tools import DotDict, deep_getattr
 import dapper.tools.progressbar as pb
 import dapper.tools.viz as viz
 from dapper.dpr_config import rc
-from dapper.mods.utils import linspace_int
 from dapper.tools.chronos import format_time
 from dapper.tools.matrices import CovMat
 from dapper.tools.progressbar import read1
@@ -729,7 +728,7 @@ def sliding_marginals(
         # Chose marginal dims to plot
         if not p.dims:
             Nx = min(10, xx.shape[-1])
-            DimsX = linspace_int(xx.shape[-1], Nx)
+            DimsX = np.linspace(0, xx.shape[-1], Nx, endpoint=False, dtype=int)
         else:
             Nx = len(p.dims)
             DimsX = p.dims

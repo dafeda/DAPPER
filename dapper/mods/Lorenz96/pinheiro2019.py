@@ -1,8 +1,9 @@
 """Settings from `bib.pinheiro2019efficient`."""
+import numpy as np
+
 import dapper.mods as modelling
 import dapper.mods.Lorenz96 as model
 from dapper.mods.Lorenz96 import LPs, step, x0
-from dapper.mods.utils import linspace_int
 from dapper.tools.localization import nd_Id_localization
 
 model.Force = 8.17
@@ -16,7 +17,7 @@ Dyn = modelling.Operator(M=Nx, model=step, noise=0.25 / tseq.dto)
 
 X0 = modelling.GaussRV(mu=x0(Nx), C=0.001)
 
-jj = linspace_int(Nx, Nx // 4, periodic=True)
+jj = np.linspace(0, Nx, Nx // 4, endpoint=False, dtype=int)
 Obs = modelling.partial_Id_Obs(Nx, jj)
 Obs = modelling.Operator(
     M=Obs.get("M"),
