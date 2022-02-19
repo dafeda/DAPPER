@@ -26,7 +26,7 @@ from dapper.tools.randvars import RV, GaussRV
 from dapper.tools.seeding import set_seed
 
 from .integration import with_recursion, with_rk4, run_forward
-from .utils import Id_Obs, ens_compatible, linspace_int, partial_Id_Obs
+from .utils import Id_Obs, ens_compatible, partial_Id_Obs
 
 
 def _default_name() -> str:
