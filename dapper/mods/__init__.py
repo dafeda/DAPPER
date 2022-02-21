@@ -19,7 +19,7 @@ import struct_tools
 import dapper.tools.progressbar as pb
 from dapper.dpr_config import rc
 from dapper.mods.utils import Id_op
-from dapper.tools.chronos import Chronology
+from dapper.tools.chronos import Chronology, Chronology2
 from dapper.tools.localization import no_localization
 from dapper.tools.matrices import CovMat
 from dapper.tools.randvars import RV, GaussRV
@@ -168,23 +168,22 @@ class HiddenMarkovModel(struct_tools.NicePrint):
 
     printopts = {"ordering": ["Dyn", "Obs", "tseq", "X0"], "indent": 4}
 
-    def simulate(self, desc="Truth & Obs"):
+    def simulate(self):
         """Generate synthetic truth and observations."""
-        Dyn, Obs, tseq, X0 = self.Dyn, self.Obs, self.tseq, self.X0
 
         # Init
-        xx = np.zeros((tseq.K + 1, Dyn.M))
-        yy = np.zeros((tseq.Ko + 1, Obs.M))
+        xx = np.zeros((self.tseq.K + 1, self.Dyn.M))
+        yy = np.zeros((self.tseq.Ko + 1, self.Obs.M))
 
-        x = X0.sample(1)
+        x = self.X0.sample(1)
         xx[0] = x
 
         # Loop
-        for k, ko, t, dt in pb.progbar(tseq.ticker, desc):
-            x = Dyn(x, t - dt, dt)
-            x = x + np.sqrt(dt) * Dyn.noise.sample(1)
+        for k, ko, t, dt in pb.progbar(self.tseq.ticker, desc="Truth & Obs"):
+            x = self.Dyn(x, t - dt, dt)
+            x = x + np.sqrt(dt) * self.Dyn.noise.sample(1)
             if ko is not None:
-                yy[ko] = Obs(x, t) + Obs.noise.sample(1)
+                yy[ko, :] = self.Obs(x, t) + self.Obs.noise.sample(1)
             xx[k] = x
 
         return xx, yy

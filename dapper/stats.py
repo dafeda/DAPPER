@@ -210,10 +210,11 @@ class Stats(series.StatPrint):
         #         merely re-write them?
         for sub in faus:
 
-            # Skip assessment if ('u' and stats not stored or plotted)
-            if k != 0 and ko == None:
-                if not (self.store_u or self.LP_instance.any_figs):
-                    continue
+            # # Skip assessment if ('u' and stats not stored or plotted)
+            # TODO: This crashes for some reason when running evensen_plotting jupyter notebook.
+            # if k != 0 and ko == None:
+            #     if not (self.store_u or self.LP_instance.any_figs):
+            #         continue
 
             # Silence repeat warnings caused by zero variance
             with np.errstate(divide="call", invalid="call"):
