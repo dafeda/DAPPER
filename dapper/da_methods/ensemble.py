@@ -37,7 +37,7 @@ class EnKF:
     def assimilate(self, HMM, xx, yy):
         # Init
         E = HMM.X0.sample(self.N)
-        self.stats.assess(0, E=E)
+        # self.stats.assess(0, E=E)
 
         # Cycle
         for k, ko, t, dt in progbar(HMM.tseq.ticker):

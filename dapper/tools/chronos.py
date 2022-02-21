@@ -1,10 +1,88 @@
 """Time sequence management, notably Chronology and Ticker."""
 
+from collections import namedtuple
+from typing import Optional
+
 import colorama
 import numpy as np
+import numpy.typing as npt
 from struct_tools import AlignedDict
 
 from dapper.tools.colors import color_text
+
+
+class Chronology2:
+    def __init__(
+        self,
+        dt: float,
+        T: float,
+        dto: float,
+        burn_in: Optional[float] = None,
+    ):
+        """_summary_
+
+        Parameters
+        ----------
+        dt : float
+            _description_
+        T : float
+            _description_
+        dto: float
+            _description_
+        burn_in : Optional[int], optional
+            Threshold to set how much time to exclude when calculating statistics, by default None
+        """
+        self.dt = dt
+        self.T = T
+        self.dto = dto
+        self.burn_in = burn_in
+
+        self.K: int = round(T / dt)
+        self.dko = round(self.dto / self.dt)
+
+    @property
+    def kko(self):
+        return self.kk[self.dko :: self.dko]
+
+    @property
+    def Ko(self):
+        return int(self.K / self.dko) - 1
+
+    @property
+    def tto(self):
+        return self.kko * self.dt
+
+    @property
+    def kk(self):
+        return np.arange(self.K + 1)
+
+    @property
+    def tt(self):
+        return self.kk * self.dt
+
+    @property
+    def mask(self) -> npt.NDArray[np.bool_]:
+        if self.burn_in is None:
+            # No values should be discarded
+            return self.tt > 0
+        else:
+            return self.tt > self.burn_in
+
+    @property
+    def masko(self) -> npt.NDArray[np.bool_]:
+        if self.burn_in is None:
+            # No values should be discarded
+            return self.tto > 0
+        else:
+            return self.tto > self.burn_in
+
+    @property
+    def ticker(self):
+        _ticker = namedtuple("Ticker", ["kk", "kko", "tt", "dt"])
+        ko_counter = iter(range(len(self.kko)))
+        for i in range(len(self.kk) - 1):
+            ko = next(ko_counter) if (i + 1) in self.kko else None
+            yield _ticker(self.kk[i] + 1, ko, self.tt[i] + 1, self.dt)
 
 
 class Chronology:
@@ -54,7 +132,7 @@ class Chronology:
         K=None,
         Tplot=None,
     ):
-
+        # TODO: Require `dt`.
         assert 3 == [dt, dto, T, dko, Ko, K].count(
             None
         ), "Chronology is specified using exactly 3 parameters."

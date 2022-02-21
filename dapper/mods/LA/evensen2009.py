@@ -17,9 +17,15 @@ from dapper.mods.Lorenz96 import LPs
 
 Nx = 1000
 Ny = 4
+
+# Measurements are made at 4 spatial points defined in `jj`.
+# A new measurement is made every 5 seconds, set using `dto`.
+# Since T = 300, the matrix of measurements has 300 / 5 = 60 rows and 4 columns.
 jj = np.linspace(0, Nx, Ny, endpoint=False, dtype=int)
 
-tseq = modelling.Chronology(dt=1, dko=5, T=300, BurnIn=-1, Tplot=100)
+T = 300
+dt = 1
+tseq = modelling.Chronology2(dt=dt, T=T, dto=round(5 * dt))
 
 # WITHOUT explicit matrix (assumes dt == dx/c):
 # step = lambda x,t,dt: np.roll(x,1,axis=x.ndim-1)
@@ -49,7 +55,6 @@ Obs = modelling.Operator(
 )
 
 HMM = modelling.HiddenMarkovModel(Dyn, Obs, tseq, X0, liveplotters=LPs(jj))
-
 
 ####################
 # Suggested tuning
