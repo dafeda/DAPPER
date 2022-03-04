@@ -313,12 +313,23 @@ class xpList(list):
             # Aggregate all other keys
             for xp in self:
 
-                # Get dataclass fields
-                try:
+                # TODO: This is not nice.
+                if dcs.is_dataclass(xp):
                     dc_fields = dcs.fields(xp.__class__)
                     dc_names = [F.name for F in dc_fields]
                     keys = xp.__dict__.keys()
-                except TypeError:
+                elif xp.__class__.__name__ in (
+                    "EnKF",
+                    "EnKS",
+                    "EnKF_N",
+                    "LETKF",
+                    "EnRTS",
+                    "SL_EAKF",
+                ):
+                    dc_fields = xp.__dict__.keys()
+                    dc_names = []
+                    keys = list(xp.__dict__.keys())
+                else:
                     # Assume namedtuple
                     dc_names = []
                     keys = xp._fields

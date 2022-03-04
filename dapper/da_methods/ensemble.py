@@ -1,4 +1,5 @@
 """The EnKF and other ensemble-based methods."""
+from typing import Optional
 
 import numpy as np
 import numpy.random as rnd
@@ -6,35 +7,37 @@ import scipy.linalg as sla
 from numpy import diag, eye, sqrt, zeros
 
 import dapper.tools.multiproc as multiproc
-from dapper.stats import center, inflate_ens, mean0
+from dapper.stats import center, inflate_ens, mean0, Stats
 from dapper.tools.linalg import mldiv, mrdiv, pad0, svd0, svdi, tinv, tsvd
 from dapper.tools.matrices import funm_psd, genOG_1
 from dapper.tools.progressbar import progbar
 from dapper.tools.randvars import GaussRV
 
-from . import da_method
 
-
-@da_method
-class ens_method:
-    """Declare default ensemble arguments."""
-
-    infl: float = 1.0
-    rot: bool = False
-    fnoise_treatm: str = "Stoch"
-
-
-@ens_method
 class EnKF:
     """The ensemble Kalman filter.
 
     Refs: `bib.evensen2009ensemble`.
     """
 
-    upd_a: str
-    N: int
+    da_method = "EnKF"
 
-    def assimilate(self, HMM, xx, yy):
+    def __init__(
+        self,
+        upd_a: str,
+        N: int,
+        infl: Optional[float] = 1.0,
+        rot: Optional[bool] = False,
+        fnoise_treatm: Optional[str] = "Stoch",
+    ):
+        self.upd_a = upd_a
+        self.N = N
+        self.infl = infl
+        self.fnoise_treatm = fnoise_treatm
+        self.rot = rot
+
+    def assimilate(self, HMM, xx, yy, label, fail_gently, store_u):
+        self.stats = Stats(self, HMM, xx, yy, store_u=store_u)
         # Init
         E = HMM.X0.sample(self.N)
         self.stats.assess(0, E=E)
@@ -66,7 +69,6 @@ def EnKF_analysis(E, Eo, hnoise, y, upd_a, stats=None, ko=None):
     """
     R = hnoise.C  # Obs noise cov
     N, Nx = E.shape  # Dimensionality
-    N1 = N - 1  # Ens size - 1
 
     mu = np.mean(E, 0)  # Ens mean
     A = E - mu  # Ens anomalies
@@ -77,7 +79,7 @@ def EnKF_analysis(E, Eo, hnoise, y, upd_a, stats=None, ko=None):
 
     if "PertObs" in upd_a:
         # Uses classic, perturbed observations (Burgers'98)
-        C = Y.T @ Y + R.full * N1
+        C = Y.T @ Y + R.full * (N - 1)
         D = mean0(hnoise.sample(N))
         YC = mrdiv(Y, C)
         KG = A.T @ YC
@@ -97,32 +99,32 @@ def EnKF_analysis(E, Eo, hnoise, y, upd_a, stats=None, ko=None):
         if "explicit" in upd_a:
             # Not recommended due to numerical costs and instability.
             # Implementation using inv (in ens space)
-            Pw = sla.inv(Y @ R.inv @ Y.T + N1 * eye(N))
-            T = sla.sqrtm(Pw) * sqrt(N1)
+            Pw = sla.inv(Y @ R.inv @ Y.T + (N - 1) * eye(N))
+            T = sla.sqrtm(Pw) * sqrt(N - 1)
             HK = R.inv @ Y.T @ Pw @ Y
             # KG = R.inv @ Y.T @ Pw @ A
         elif "svd" in upd_a:
             # Implementation using svd of Y R^{-1/2}.
             V, s, _ = svd0(Y @ R.sym_sqrt_inv.T)
-            d = pad0(s**2, N) + N1
+            d = pad0(s**2, N) + (N - 1)
             Pw = (V * d ** (-1.0)) @ V.T
-            T = (V * d ** (-0.5)) @ V.T * sqrt(N1)
+            T = (V * d ** (-0.5)) @ V.T * sqrt(N - 1)
             # docs/snippets/trHK.jpg
-            trHK = np.sum((s**2 + N1) ** (-1.0) * s**2)
+            trHK = np.sum((s**2 + (N - 1)) ** (-1.0) * s**2)
         elif "sS" in upd_a:
             # Same as 'svd', but with slightly different notation
             # (sometimes used by Sakov) using the normalization sqrt(N1).
-            S = Y @ R.sym_sqrt_inv.T / sqrt(N1)
+            S = Y @ R.sym_sqrt_inv.T / sqrt(N - 1)
             V, s, _ = svd0(S)
             d = pad0(s**2, N) + 1
-            Pw = (V * d ** (-1.0)) @ V.T / N1  # = G/(N1)
+            Pw = (V * d ** (-1.0)) @ V.T / (N - 1)  # = G/(N1)
             T = (V * d ** (-0.5)) @ V.T
             # docs/snippets/trHK.jpg
             trHK = np.sum((s**2 + 1) ** (-1.0) * s**2)
         else:  # 'eig' in upd_a:
             # Implementation using eig. val. decomp.
-            d, V = sla.eigh(Y @ R.inv @ Y.T + N1 * eye(N))
-            T = V @ diag(d ** (-0.5)) @ V.T * sqrt(N1)
+            d, V = sla.eigh(Y @ R.inv @ Y.T + (N - 1) * eye(N))
+            T = V @ diag(d ** (-0.5)) @ V.T * sqrt(N - 1)
             Pw = V @ diag(d ** (-1.0)) @ V.T
             HK = R.inv @ Y.T @ (V @ diag(d ** (-1)) @ V.T) @ Y
         w = dy @ R.inv @ Y.T @ Pw
@@ -161,7 +163,7 @@ def EnKF_analysis(E, Eo, hnoise, y, upd_a, stats=None, ko=None):
                         mult = (v @ A) / (Yj @ A)  # noqa
                         v = v - mult[0] * Yj  # noqa
                         v /= sqrt(v @ v)
-                    Zj = v * sqrt(N1)  # Standardized perturbation along v
+                    Zj = v * sqrt(N - 1)  # Standardized perturbation along v
                     Zj *= np.sign(rnd.rand() - 0.5)  # Random sign
                 else:
                     # The usual stochastic perturbations.
@@ -176,7 +178,7 @@ def EnKF_analysis(E, Eo, hnoise, y, upd_a, stats=None, ko=None):
                 DYj = DYj[:, None]  # Make 2d vertical
 
                 # Kalman gain computation
-                C = Yj @ Yj + N1  # Total obs cov
+                C = Yj @ Yj + (N - 1)  # Total obs cov
                 KGx = Yj @ A / C  # KG to update state
                 KGy = Yj @ Y / C  # KG to update obs
 
@@ -197,16 +199,16 @@ def EnKF_analysis(E, Eo, hnoise, y, upd_a, stats=None, ko=None):
             T = eye(N)
             for j in inds:
                 Yj = Y[:, j]
-                C = Yj @ Yj + N1
-                Tj = np.outer(Yj, Yj / (C + sqrt(N1 * C)))
+                C = Yj @ Yj + (N - 1)
+                Tj = np.outer(Yj, Yj / (C + sqrt((N - 1) * C)))
                 T -= Tj @ T
                 Y -= Tj @ Y
-            w = dy @ Y.T @ T / N1
+            w = dy @ Y.T @ T / (N - 1)
             E = mu + w @ A + T @ A
 
     elif "DEnKF" == upd_a:
         # Uses "Deterministic EnKF" (sakov'08)
-        C = Y.T @ Y + R.full * N1
+        C = Y.T @ Y + R.full * (N - 1)
         YC = mrdiv(Y, C)
         KG = A.T @ YC
         HK = Y.T @ YC
@@ -345,7 +347,6 @@ def add_noise(E, dt, noise, method):
     return E
 
 
-@ens_method
 class EnKS:
     """The ensemble Kalman smoother.
 
@@ -355,9 +356,23 @@ class EnKS:
     is the management of the lag and the reshapings.
     """
 
-    upd_a: str
-    N: int
-    Lag: int
+    da_method = "EnKS"
+
+    def __init__(
+        self,
+        upd_a: str,
+        N: int,
+        Lag: int,
+        infl: Optional[float] = 1.0,
+        rot: Optional[bool] = False,
+        fnoise_treatm: Optional[str] = "Stoch",
+    ):
+        self.upd_a = upd_a
+        self.N = N
+        self.Lag = Lag
+        self.infl = infl
+        self.rot = rot
+        self.fnoise_treatm = fnoise_treatm
 
     # Reshapings used in smoothers to go to/from
     # 3D arrays, where the 0th axis is the Lag index.
@@ -370,9 +385,10 @@ class EnKS:
         K = Km // Nx
         return E.reshape((N, K, Nx)).transpose([1, 0, 2])
 
-    def assimilate(self, HMM, xx, yy):
+    def assimilate(self, HMM, xx, yy, label, fail_gently, store_u):
         # Inefficient version, storing full time series ensemble.
         # See iEnKS for a "rolling" version.
+        self.stats = Stats(self, HMM, xx, yy, store_u=store_u)
         E = zeros((HMM.tseq.K + 1, self.N, HMM.Dyn.M))
         E[0] = HMM.X0.sample(self.N)
 
@@ -403,18 +419,32 @@ class EnKS:
                 self.stats.assess(k, ko, "s", E=E[k])
 
 
-@ens_method
 class EnRTS:
     """EnRTS (Rauch-Tung-Striebel) smoother.
 
     Refs: `bib.raanes2016thesis`
     """
 
-    upd_a: str
-    N: int
-    DeCorr: float
+    da_method = "EnRTS"
 
-    def assimilate(self, HMM, xx, yy):
+    def __init__(
+        self,
+        upd_a: str,
+        N: int,
+        DeCorr: float,
+        infl: Optional[float] = 1.0,
+        rot: Optional[bool] = False,
+        fnoise_treatm: Optional[str] = "Stoch",
+    ):
+        self.upd_a = upd_a
+        self.N = N
+        self.DeCorr = DeCorr
+        self.infl = infl
+        self.rot = rot
+        self.fnoise_treatm = fnoise_treatm
+
+    def assimilate(self, HMM, xx, yy, label, fail_gently, store_u):
+        self.stats = Stats(self, HMM, xx, yy, store_u=store_u)
         E = zeros((HMM.tseq.K + 1, self.N, HMM.Dyn.M))
         Ef = E.copy()
         E[0] = HMM.X0.sample(self.N)
@@ -473,7 +503,6 @@ def serial_inds(upd_a, y, cvR, A):
     return inds
 
 
-@ens_method
 class SL_EAKF:
     """Serial, covariance-localized EAKF.
 
@@ -486,12 +515,28 @@ class SL_EAKF:
     to the `EnKF` with `upd_a='Serial'`.
     """
 
-    N: int
-    loc_rad: float
-    taper: str = "GC"
-    ordr: str = "rand"
+    da_method = "SL_EAKF"
 
-    def assimilate(self, HMM, xx, yy):
+    def __init__(
+        self,
+        N: int,
+        loc_rad: float,
+        infl: Optional[float] = 1.0,
+        taper: Optional[str] = "GC",
+        ordr: Optional[str] = "rand",
+        rot: Optional[bool] = False,
+        fnoise_treatm: Optional[str] = "Stoch",
+    ):
+        self.N = N
+        self.loc_rad = loc_rad
+        self.infl = infl
+        self.taper = taper
+        self.ordr = ordr
+        self.rot = rot
+        self.fnoise_treatm = fnoise_treatm
+
+    def assimilate(self, HMM, xx, yy, label, fail_gently, store_u):
+        self.stats = Stats(self, HMM, xx, yy, store_u=store_u)
         N1 = self.N - 1
         R = HMM.Obs.noise
         Rm12 = HMM.Obs.noise.C.sym_sqrt_inv
@@ -602,7 +647,6 @@ def local_analyses(E, Eo, R, y, state_batches, obs_taperer, mp=map, xN=None, g=0
     return E, dict(ad_inf=sqrt(np.mean(np.array(infl1) ** 2)))
 
 
-@ens_method
 class LETKF:
     """Same as EnKF (Sqrt), but with localization.
 
@@ -615,14 +659,32 @@ class LETKF:
     NB: If `len(ii)` is small, analysis may be slowed-down with '-N' infl.
     """
 
-    N: int
-    loc_rad: float
-    taper: str = "GC"
-    xN: float = None
-    g: int = 0
-    mp: bool = False
+    da_method = "LETKF"
 
-    def assimilate(self, HMM, xx, yy):
+    def __init__(
+        self,
+        N: int,
+        loc_rad: float,
+        infl: Optional[float] = 1.0,
+        taper: Optional[str] = "GC",
+        xN: Optional[float] = 1.0,
+        g: Optional[int] = 0,
+        mp: Optional[bool] = False,
+        rot: Optional[bool] = False,
+        fnoise_treatm: Optional[str] = "Stoch",
+    ):
+        self.N = N
+        self.loc_rad = loc_rad
+        self.infl = infl
+        self.taper = taper
+        self.xN = xN
+        self.g = g
+        self.mp = mp
+        self.rot = rot
+        self.fnoise_treatm = fnoise_treatm
+
+    def assimilate(self, HMM, xx, yy, label, fail_gently, store_u):
+        self.stats = Stats(self, HMM, xx, yy, store_u=store_u)
         E = HMM.X0.sample(self.N)
         self.stats.assess(0, E=E)
         self.stats.new_series("ad_inf", 1, HMM.tseq.Ko + 1)
@@ -834,7 +896,6 @@ def zeta_a(eN, cL, w):
     return za
 
 
-@ens_method
 class EnKF_N:
     """Finite-size EnKF (EnKF-N).
 
@@ -862,13 +923,30 @@ class EnKF_N:
     Further description in hyperprior_coeffs().
     """
 
-    N: int
-    dual: bool = False
-    Hess: bool = False
-    xN: float = 1.0
-    g: int = 0
+    da_method = "EnKF_N"
 
-    def assimilate(self, HMM, xx, yy):
+    def __init__(
+        self,
+        N: int,
+        infl: Optional[float] = 1.0,
+        dual: Optional[bool] = False,
+        Hess: Optional[bool] = False,
+        xN: Optional[float] = 1.0,
+        g: Optional[int] = 0,
+        rot: Optional[bool] = False,
+        fnoise_treatm: Optional[str] = "Stoch",
+    ):
+        self.N = N
+        self.infl = infl
+        self.dual = dual
+        self.Hess = Hess
+        self.xN = xN
+        self.g = g
+        self.rot = rot
+        self.fnoise_treatm = fnoise_treatm
+
+    def assimilate(self, HMM, xx, yy, label, fail_gently, store_u):
+        self.stats = Stats(self, HMM, xx, yy, store_u=store_u)
         R, N, N1 = HMM.Obs.noise.C, self.N, self.N - 1
 
         # Init

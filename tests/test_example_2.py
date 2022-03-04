@@ -19,11 +19,6 @@ statkeys = ["err.rms.a", "err.rms.f", "err.rms.u"]
 ##############################
 # L63
 ##############################
-@pytest.fixture(scope="module")
-def L63_table():
-    xps = L63_gen()
-    table = xps.tabulate_avrgs(statkeys, decimals=4, colorize=False)
-    return table.splitlines(True)
 
 
 def L63_gen():
@@ -61,6 +56,13 @@ def L63_gen():
     # Run
     xps.launch(HMM, False, store_u=True)
     return xps
+
+
+@pytest.fixture(scope="module")
+def L63_table():
+    xps = L63_gen()
+    table = xps.tabulate_avrgs(statkeys, decimals=4, colorize=False)
+    return table.splitlines(True)
 
 
 L63_old = """
@@ -106,79 +108,79 @@ def test_tables_L63(L63_table, lineno):
     assert new == expected
 
 
-##############################
-# L96
-##############################
-@pytest.fixture(scope="module")
-def L96_table():
-    xps = L96_gen()
-    table = xps.tabulate_avrgs(statkeys, decimals=4, colorize=False)
-    return table.splitlines(True)
+# ##############################
+# # L96
+# ##############################
+# @pytest.fixture(scope="module")
+# def L96_table():
+#     xps = L96_gen()
+#     table = xps.tabulate_avrgs(statkeys, decimals=4, colorize=False)
+#     return table.splitlines(True)
 
 
-def L96_gen():
-    import dapper.mods.Lorenz96 as model
-    from dapper.mods.Lorenz96.sakov2008 import HMM as _HMM
+# def L96_gen():
+#     import dapper.mods.Lorenz96 as model
+#     from dapper.mods.Lorenz96.sakov2008 import HMM as _HMM
 
-    model.Force = 8.0  # undo pinheiro2019
-    HMM = _HMM.copy()
-    HMM.tseq.BurnIn = 0
-    HMM.tseq.Ko = 10
+#     model.Force = 8.0  # undo pinheiro2019
+#     HMM = _HMM.copy()
+#     HMM.tseq.BurnIn = 0
+#     HMM.tseq.Ko = 10
 
-    # xps
-    xps = dpr.xpList()
-    xps += da.Climatology()
-    xps += da.OptInterp()
-    xps += da.Persistence()
-    xps += da.PreProg(lambda k, xx, yy: xx[k])
-    xps += da.Var3D(xB=0.02)
-    xps += da.ExtKF(infl=6)
-    xps += da.EnKF("PertObs", N=40, infl=1.06)
-    xps += da.EnKF("Sqrt", N=28, infl=1.02, rot=True)
+#     # xps
+#     xps = dpr.xpList()
+#     xps += da.Climatology()
+#     xps += da.OptInterp()
+#     xps += da.Persistence()
+#     xps += da.PreProg(lambda k, xx, yy: xx[k])
+#     xps += da.Var3D(xB=0.02)
+#     xps += da.ExtKF(infl=6)
+#     xps += da.EnKF("PertObs", N=40, infl=1.06)
+#     xps += da.EnKF("Sqrt", N=28, infl=1.02, rot=True)
 
-    xps += da.EnKF_N(N=24, rot=True)
-    xps += da.EnKF_N(N=24, rot=True, xN=2)
-    xps += da.iEnKS("Sqrt", N=40, infl=1.01, rot=True)
+#     xps += da.EnKF_N(N=24, rot=True)
+#     xps += da.EnKF_N(N=24, rot=True, xN=2)
+#     xps += da.iEnKS("Sqrt", N=40, infl=1.01, rot=True)
 
-    xps += da.LETKF(N=7, rot=True, infl=1.04, loc_rad=4)
-    xps += da.SL_EAKF(N=7, rot=True, infl=1.07, loc_rad=6)
+#     xps += da.LETKF(N=7, rot=True, infl=1.04, loc_rad=4)
+#     xps += da.SL_EAKF(N=7, rot=True, infl=1.07, loc_rad=6)
 
-    for xp in xps:
-        xp.seed = 3000
+#     for xp in xps:
+#         xp.seed = 3000
 
-    xps.launch(HMM, store_u=True)
-    return xps
-
-
-L96_old = """
-    da_method    infl  upd_a     N  rot    xN  loc_rad  |  err.rms.a  1σ      err.rms.f  1σ      err.rms.u  1σ
---  -----------  ----  -------  --  -----  --  -------  -  -----------------  -----------------  -----------------
- 0  Climatology                                         |     0.8334 ±0.2326     0.8334 ±0.2326     0.8334 ±0.2326
- 1  OptInterp                                           |     0.0949 ±0.0292     0.8334 ±0.2326     0.0949 ±0.0292
- 2  Persistence                                         |     0.3071 ±0.0284     0.3071 ±0.0284     0.3071 ±0.0284
- 3  PreProg                                             |     0.0000 ±0.0000     0.0000 ±0.0000     0.0000 ±0.0000
- 4  Var3D                                               |     0.0593 ±0.0057     0.0575 ±0.0055     0.0593 ±0.0057
- 5  ExtKF        6                                      |     0.0350 ±0.0010     0.0352 ±0.0011     0.0350 ±0.0010
- 6  EnKF         1.06  PertObs  40  False               |     0.0355 ±0.0011     0.0356 ±0.0011     0.0355 ±0.0011
- 7  EnKF         1.02  Sqrt     28  True                |     0.0352 ±0.0010     0.0352 ±0.0011     0.0352 ±0.0010
- 8  EnKF_N       1              24  True    1           |     0.0360 ±0.0011     0.0360 ±0.0012     0.0360 ±0.0011
- 9  EnKF_N       1              24  True    2           |     0.0360 ±0.0011     0.0360 ±0.0012     0.0360 ±0.0011
-10  iEnKS        1.01  Sqrt     40  True                |     0.0356 ±0.0011     0.0357 ±0.0012     0.0356 ±0.0011
-11  LETKF        1.04            7  True             4  |     0.0356 ±0.0010     0.0358 ±0.0012     0.0356 ±0.0010
-12  SL_EAKF      1.07            7  True             6  |     0.0354 ±0.0010     0.0357 ±0.0012     0.0354 ±0.0010
-"""[
-    1:-1
-].splitlines(
-    True
-)
+#     xps.launch(HMM, store_u=True)
+#     return xps
 
 
-def test_len96(L96_table):
-    assert len(L96_old) == len(L96_table)
+# L96_old = """
+#     da_method    infl  upd_a     N  rot    xN  loc_rad  |  err.rms.a  1σ      err.rms.f  1σ      err.rms.u  1σ
+# --  -----------  ----  -------  --  -----  --  -------  -  -----------------  -----------------  -----------------
+#  0  Climatology                                         |     0.8334 ±0.2326     0.8334 ±0.2326     0.8334 ±0.2326
+#  1  OptInterp                                           |     0.0949 ±0.0292     0.8334 ±0.2326     0.0949 ±0.0292
+#  2  Persistence                                         |     0.3071 ±0.0284     0.3071 ±0.0284     0.3071 ±0.0284
+#  3  PreProg                                             |     0.0000 ±0.0000     0.0000 ±0.0000     0.0000 ±0.0000
+#  4  Var3D                                               |     0.0593 ±0.0057     0.0575 ±0.0055     0.0593 ±0.0057
+#  5  ExtKF        6                                      |     0.0350 ±0.0010     0.0352 ±0.0011     0.0350 ±0.0010
+#  6  EnKF         1.06  PertObs  40  False               |     0.0355 ±0.0011     0.0356 ±0.0011     0.0355 ±0.0011
+#  7  EnKF         1.02  Sqrt     28  True                |     0.0352 ±0.0010     0.0352 ±0.0011     0.0352 ±0.0010
+#  8  EnKF_N       1              24  True    1           |     0.0360 ±0.0011     0.0360 ±0.0012     0.0360 ±0.0011
+#  9  EnKF_N       1              24  True    2           |     0.0360 ±0.0011     0.0360 ±0.0012     0.0360 ±0.0011
+# 10  iEnKS        1.01  Sqrt     40  True                |     0.0356 ±0.0011     0.0357 ±0.0012     0.0356 ±0.0011
+# 11  LETKF        1.04            7  True             4  |     0.0356 ±0.0010     0.0358 ±0.0012     0.0356 ±0.0010
+# 12  SL_EAKF      1.07            7  True             6  |     0.0354 ±0.0010     0.0357 ±0.0012     0.0354 ±0.0010
+# """[
+#     1:-1
+# ].splitlines(
+#     True
+# )
 
 
-@pytest.mark.parametrize(("lineno"), range(len(L96_old)))
-def test_tables_L96(L96_table, lineno):
-    expected = L96_old[lineno].rstrip()
-    new = L96_table[lineno].rstrip()
-    assert new == expected
+# def test_len96(L96_table):
+#     assert len(L96_old) == len(L96_table)
+
+
+# @pytest.mark.parametrize(("lineno"), range(len(L96_old)))
+# def test_tables_L96(L96_table, lineno):
+#     expected = L96_old[lineno].rstrip()
+#     new = L96_table[lineno].rstrip()
+#     assert new == expected

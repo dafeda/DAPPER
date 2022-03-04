@@ -12,6 +12,40 @@ from dapper.tools.colors import color_text
 
 
 class Chronology2:
+    """Time schedules with consistency checks.
+
+    - Uses int records, so `tt[k] == k*dt`.
+    - Uses generators, so time series may be arbitrarily long.
+
+    Example illustration:
+
+                             [----dto------]
+                      [--dt--]
+        tt:    0.0    0.2    0.4    0.6    0.8    1.0    T
+        kk:    0      1      2      3      4      5      K
+               |------|------|------|------|------|------|
+        ko:    None   None   0      None   1      None   Ko
+        kko:                 2             4             6
+                             [----dko------]
+
+    .. warning:: By convention, there is no obs at 0.
+                 This is hardcorded in DAPPER,
+                 whose cycling starts by the forecast.
+
+    Identities (subject to precision):
+
+        len(kk)  == len(tt)  == K   +1
+        len(kko) == len(tto) == Ko+1
+
+        kko[0]   == dko      == dto/dt == K/(Ko+1)
+        kko[-1]  == K        == T/dt
+        Ko       == T/dto-1
+
+    These attributes may be set (altered) after init: `dt, dko, K, T`.
+    Setting other attributes (alone) is ambiguous
+    (e.g. should `dto*=2` yield a doubling of `T` too?),
+    and so should/will raise an exception.
+    """
     def __init__(
         self,
         dt: float,
@@ -19,8 +53,7 @@ class Chronology2:
         dto: float,
         burn_in: Optional[float] = None,
     ):
-        """_summary_
-
+        """
         Parameters
         ----------
         dt : float

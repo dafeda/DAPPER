@@ -2,7 +2,6 @@
 
 .. include:: ./README.md
 """
-from pathlib import Path
 
 
 def da_method(*default_dataclasses):

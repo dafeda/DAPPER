@@ -1,5 +1,6 @@
 """More experimental or esoteric DA methods."""
 
+from typing import Optional
 import numpy as np
 
 from dapper.da_methods.ensemble import add_noise, post_process, serial_inds
@@ -8,10 +9,7 @@ from dapper.stats import center
 from dapper.tools.matrices import funm_psd
 from dapper.tools.progressbar import progbar
 
-from .ensemble import ens_method
 
-
-@ens_method
 class RHF:
     """Rank histogram filter.
 
@@ -20,8 +18,19 @@ class RHF:
     Quick & dirty implementation without attention to (de)tails.
     """
 
-    N: int
-    ordr: str = "rand"
+    def __init__(
+        self,
+        upd_a: str,
+        N: int,
+        infl: Optional[float] = 1.0,
+        fnoise_treatm: Optional[str] = "Stoch",
+        ordr: Optional[str] = "rand",
+    ):
+        self.upd_a = upd_a
+        self.N = N
+        self.infl = infl
+        self.fnoise_treatm = fnoise_treatm
+        self.ordr = ordr
 
     def assimilate(self, HMM, xx, yy):
         Dyn, Obs, tseq, X0, stats, N = (
@@ -83,7 +92,6 @@ class RHF:
             stats.assess(k, ko, E=E)
 
 
-@ens_method
 class LNETF:
     """The Nonlinear-Ensemble-Transform-Filter (localized).
 
@@ -96,6 +104,24 @@ class LNETF:
     loc_rad: float
     taper: str = "GC"
     Rs: float = 1.0
+
+    def __init__(
+        self,
+        upd_a: str,
+        N: int,
+        loc_rad: float,
+        infl: Optional[float] = 1.0,
+        fnoise_treatm: Optional[str] = "Stoch",
+        taper: Optional[str] = "GC",
+        Rs: Optional[float] = 1.0,
+    ):
+        self.upd_a = upd_a
+        self.N = N
+        self.loc_rad = loc_rad
+        self.infl = infl
+        self.fnoise_treatm = fnoise_treatm
+        self.taper = taper
+        self.Rs = Rs
 
     def assimilate(self, HMM, xx, yy):
         Dyn, Obs, tseq, X0, stats = HMM.Dyn, HMM.Obs, HMM.tseq, HMM.X0, self.stats
