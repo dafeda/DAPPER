@@ -1,8 +1,8 @@
 """The extended KF (EKF) and the (Rauch-Tung-Striebel) smoother."""
 
 import numpy as np
+import scipy.linalg as sla
 
-from dapper.tools.linalg import mrdiv
 from dapper.tools.progressbar import progbar
 
 from . import da_method
@@ -45,7 +45,7 @@ class ExtKF:
             if ko is not None:
                 self.stats.assess(k, ko, "f", mu=mu, Cov=P)
                 H = HMM.Obs.linear(mu, t)
-                KG = mrdiv(P @ H.T, H @ P @ H.T + R)
+                KG = sla.solve((H @ P @ H.T + R).T, (P @ H.T).T).T
                 y = yy[ko]
                 mu = mu + KG @ (y - HMM.Obs(mu, t))
                 KH = KG @ H
@@ -97,7 +97,7 @@ class ExtRTS:
             if ko is not None:
                 self.stats.assess(k, ko, "f", mu=mu[k], Cov=P[k])
                 H = HMM.Obs.linear(mu[k], t)
-                KG = mrdiv(P[k] @ H.T, H @ P[k] @ H.T + R)
+                KG = sla.solve((H @ P[k] @ H.T + R).T, (P[k] @ H.T).T).T
                 y = yy[ko]
                 mu[k] = mu[k] + KG @ (y - HMM.Obs(mu[k], t))
                 KH = KG @ H
@@ -106,7 +106,7 @@ class ExtRTS:
 
         # Backward pass
         for k in progbar(range(HMM.tseq.K)[::-1], "ExtRTS<-"):
-            J = mrdiv(P[k] @ Ff[k + 1].T, Pf[k + 1])
+            J = sla.solve(Pf[k + 1].T, (P[k] @ Ff[k + 1].T).T).T
             J *= self.DeCorr
             mu[k] = mu[k] + J @ (mu[k + 1] - muf[k + 1])
             P[k] = P[k] + J @ (P[k + 1] - Pf[k + 1]) @ J.T

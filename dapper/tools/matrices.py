@@ -6,7 +6,7 @@ import numpy as np
 import scipy.linalg as sla
 from numpy import ones, sqrt, zeros
 
-from dapper.tools.linalg import mrdiv, svd0, truncate_rank
+from dapper.tools.linalg import svd0, truncate_rank
 
 
 class lazy_property:
@@ -93,7 +93,7 @@ def genOG_modified(M, opts=(0, 1.0)):
         Q = genOG(M)
         s, U = sla.eig(Q)
         s2 = np.exp(1j * np.angle(s) * degree)  # reduce angles
-        Q = mrdiv(U * s2, U)
+        Q = sla.solve(U.T, (U * s2).T).T
         Q = Q.real
     elif ver == 3:
         # Reduce Given's rotations in QR algo

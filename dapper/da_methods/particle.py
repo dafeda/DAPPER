@@ -2,9 +2,10 @@
 
 import numpy as np
 import numpy.random as rnd
+import scipy.linalg as sla
 
 from dapper.stats import unbias_var, weight_degeneracy
-from dapper.tools.linalg import mldiv, mrdiv, pad0, svd0, tinv
+from dapper.tools.linalg import mldiv, pad0, svd0, tinv
 from dapper.tools.matrices import chol_reduce, funm_psd
 from dapper.tools.progressbar import progbar
 
@@ -129,7 +130,7 @@ class OptPF:
                 As = s * raw_C12(E, w)
                 Ys = s * raw_C12(Eo, w)
                 C = Ys.T @ Ys + R
-                KG = As.T @ mrdiv(Ys, C)
+                KG = As.T @ sla.solve(C.T, Ys.T).T
                 E += sample_quickly_with(As)[0]
                 D = HMM.Obs.noise.sample(N)
                 dE = KG @ (y - HMM.Obs(E, t) - D).T
@@ -281,7 +282,7 @@ class PFxN_EnKF:
                     # EnKF-without-pertubations update
                     if N > Nx:
                         C = Yw.T @ Yw + HMM.Obs.noise.C.full
-                        KG = mrdiv(Aw.T @ Yw, C)
+                        KG = sla.solve(C.T, (Aw.T @ Yw).T).T
                         cntrs = E + (y - Eo) @ KG.T
                         Pa = Aw.T @ Aw - KG @ Yw.T @ Aw
                         P_cholU = funm_psd(Pa, np.sqrt)

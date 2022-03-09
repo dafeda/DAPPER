@@ -5,10 +5,10 @@ Many are based on `bib.raanes2016thesis`.
 from typing import Callable, Optional
 
 import numpy as np
+import scipy.linalg as sla
 
 import dapper.tools.series as series
 from dapper.stats import center
-from dapper.tools.linalg import mrdiv
 from dapper.tools.matrices import CovMat
 from dapper.tools.progressbar import progbar
 
@@ -69,7 +69,7 @@ class OptInterp:
 
                 # Analysis
                 H = HMM.Obs.linear(muC, t)
-                KG = mrdiv(PC @ H.T, H @ PC @ H.T + HMM.Obs.noise.C.full)
+                KG = sla.solve((H @ PC @ H.T + HMM.Obs.noise.C.full).T, (PC @ H.T).T).T
                 mu = muC + KG @ (yy[ko] - HMM.Obs(muC, t))
 
                 P = (Id - KG @ H) @ PC
@@ -124,7 +124,7 @@ class Var3D:
 
                 # Analysis
                 H = HMM.Obs.linear(mu, t)
-                KG = mrdiv(B @ H.T, H @ B @ H.T + HMM.Obs.noise.C.full)
+                KG = sla.solve((H @ B @ H.T + HMM.Obs.noise.C.full).T, (B @ H.T).T).T
                 mu = mu + KG @ (yy[ko] - HMM.Obs(mu, t))
 
                 # Re-calibrate fit_sigmoid with new W0 = Pa/B

@@ -8,7 +8,7 @@ from numpy import diag, eye, sqrt, zeros
 
 import dapper.tools.multiproc as multiproc
 from dapper.stats import center, inflate_ens, mean0, Stats
-from dapper.tools.linalg import mldiv, mrdiv, pad0, svd0, svdi, tinv, tsvd
+from dapper.tools.linalg import mldiv, pad0, svd0, svdi, tinv, tsvd
 from dapper.tools.matrices import funm_psd, genOG_1
 from dapper.tools.progressbar import progbar
 from dapper.tools.randvars import GaussRV
@@ -81,7 +81,7 @@ def EnKF_analysis(E, Eo, hnoise, y, upd_a, stats=None, ko=None):
         # Uses classic, perturbed observations (Burgers'98)
         C = Y.T @ Y + R.full * (N - 1)
         D = mean0(hnoise.sample(N))
-        YC = mrdiv(Y, C)
+        YC = sla.solve(C.T, Y.T).T
         KG = A.T @ YC
         HK = Y.T @ YC
         dE = (KG @ (y - D - Eo).T).T
@@ -209,7 +209,7 @@ def EnKF_analysis(E, Eo, hnoise, y, upd_a, stats=None, ko=None):
     elif "DEnKF" == upd_a:
         # Uses "Deterministic EnKF" (sakov'08)
         C = Y.T @ Y + R.full * (N - 1)
-        YC = mrdiv(Y, C)
+        YC = sla.solve(C.T, Y.T).T
         KG = A.T @ YC
         HK = Y.T @ YC
         E = E + KG @ dy - 0.5 * (KG @ Y.T).T
@@ -280,7 +280,7 @@ def add_noise(E, dt, noise, method):
             A2 = T @ A2
         else:  # "Left-multiplying" form
             P = A2.T @ A2 / (N - 1)
-            L = funm_psd(eye(Nx) + dt * mrdiv(Q, P), sqrt)
+            L = funm_psd(eye(Nx) + dt * sla.solve(P.T, Q.T).T, sqrt)
             A2 = A2 @ L.T
         E = mu + A2
         return E, T, Qa12

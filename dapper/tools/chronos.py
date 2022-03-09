@@ -46,6 +46,7 @@ class Chronology2:
     (e.g. should `dto*=2` yield a doubling of `T` too?),
     and so should/will raise an exception.
     """
+
     def __init__(
         self,
         dt: float,

@@ -4,11 +4,6 @@ import numpy as np
 import scipy.linalg as sla
 
 
-def mrdiv(b, A):
-    """b/A."""
-    return sla.solve(A.T, b.T).T
-
-
 def mldiv(A, b):
     r"""A\b."""
     return sla.solve(A, b)
