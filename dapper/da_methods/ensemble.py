@@ -1,7 +1,8 @@
 """The EnKF and other ensemble-based methods."""
-from typing import Optional
+from typing import Optional, Literal
 
 import numpy as np
+import numpy.typing as npt
 import numpy.random as rnd
 import scipy.linalg as sla
 from numpy import diag, eye, sqrt, zeros
@@ -58,7 +59,19 @@ class EnKF:
             self.stats.assess(k, ko, E=E)
 
 
-def EnKF_analysis(E, Eo, hnoise, y, upd_a, stats=None, ko=None):
+# TODO: Use Enum for different types of updates.
+UPDATE_METHOD = Literal["PertObs", "Sqrt", "Serial", "DEnKF"]
+
+
+def EnKF_analysis(
+    E: npt.NDArray[np.float_],
+    Eo: npt.NDArray[np.float_],
+    hnoise,
+    y,
+    upd_a: UPDATE_METHOD,
+    stats=None,
+    ko=None,
+):
     """Perform the EnKF analysis update.
 
     This implementation includes several flavours and forms,
@@ -67,8 +80,11 @@ def EnKF_analysis(E, Eo, hnoise, y, upd_a, stats=None, ko=None):
     Main references: `bib.sakov2008deterministic`,
     `bib.sakov2008implications`, `bib.hoteit2015mitigating`
     """
+
     R = hnoise.C  # Obs noise cov
-    N, Nx = E.shape  # Dimensionality
+    N, Nx = E.shape
+
+    assert Eo.shape == (N, hnoise.M)
 
     mu = np.mean(E, 0)  # Ens mean
     A = E - mu  # Ens anomalies
@@ -79,11 +95,16 @@ def EnKF_analysis(E, Eo, hnoise, y, upd_a, stats=None, ko=None):
 
     if "PertObs" in upd_a:
         # Uses classic, perturbed observations (Burgers'98)
-        C = Y.T @ Y + R.full * (N - 1)
+        P = Y.T @ Y
+        assert P.shape == (hnoise.M, hnoise.M)
+        C = P + R.full * (N - 1)
         D = mean0(hnoise.sample(N))
+        assert D.shape == (N, hnoise.M)
         YC = sla.solve(C.T, Y.T).T
         KG = A.T @ YC
-        HK = Y.T @ YC
+        assert KG.shape == (Nx, hnoise.M)
+        # (y - D) og size (N x hnoise.M) is the perturbed measurement matrix.
+        # Eo is $\bm{H}\overline{\psi^f}$
         dE = (KG @ (y - D - Eo).T).T
         E = E + dE
 
@@ -374,12 +395,6 @@ class EnKS:
         self.rot = rot
         self.fnoise_treatm = fnoise_treatm
 
-    # Reshapings used in smoothers to go to/from
-    # 3D arrays, where the 0th axis is the Lag index.
-    def reshape_to(self, E):
-        K, N, Nx = E.shape
-        return E.transpose([1, 0, 2]).reshape((N, K * Nx))
-
     def reshape_fr(self, E, Nx):
         N, Km = E.shape
         K = Km // Nx
@@ -395,19 +410,27 @@ class EnKS:
         for k, ko, t, dt in progbar(HMM.tseq.ticker):
             E[k] = HMM.Dyn(E[k - 1], t - dt, dt)
             E[k] = add_noise(E[k], dt, HMM.Dyn.noise, self.fnoise_treatm)
-
             if ko is not None:
                 self.stats.assess(k, ko, "f", E=E[k])
 
+                # Predicted state at points in space-time where observations are made.
                 Eo = HMM.Obs(E[k], t)
+
                 y = yy[ko]
 
                 # Inds within Lag
                 kk = range(max(0, k - self.Lag * HMM.tseq.dko), k + 1)
 
+                # Choose part of parameter-state space to use in update.
+                # For example,
+                # the first iteration of EnKS uses parameters/state from k=0 to the first measurement.
                 EE = E[kk]
 
-                EE = self.reshape_to(EE)
+                # Reshapings used in smoothers to go to/from
+                # 3D arrays, where the 0th axis is the Lag index.
+                K, N, Nx = EE.shape
+                EE = EE.transpose((1, 0, 2)).reshape((N, K * Nx))
+
                 EE = EnKF_analysis(EE, Eo, HMM.Obs.noise, y, self.upd_a, self.stats, ko)
                 E[kk] = self.reshape_fr(EE, HMM.Dyn.M)
                 E[k] = post_process(E[k], self.infl, self.rot)

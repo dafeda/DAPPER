@@ -1,9 +1,11 @@
 """Utilities to help define hidden Markov models."""
 
+from typing import Callable, Dict, Union
 import functools
 from pathlib import Path
 
 import numpy as np
+import numpy.typing as npt
 import scipy.linalg as sla
 
 from dapper.tools.rounding import is_whole
@@ -143,7 +145,9 @@ def direct_obs_matrix(Nx, obs_inds):
     return H
 
 
-def partial_Id_Obs(Nx, obs_inds):
+def partial_Id_Obs(
+    Nx: int, obs_inds: npt.NDArray[np.int_]
+) -> Dict[str, Union[str, Callable]]:
     """Specify identity observations of a subset of obs. indices.
 
     It is not a function of time.
